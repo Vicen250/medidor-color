@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1, user-scalable=no">
+<title>Medidor de color</title>
+<meta name="description" content="Mide el color exacto de un punto de una foto y encuentra su equivalencia en RAL y otras escalas.">
+<meta name="theme-color" content="#2b2b2b">
+<link rel="manifest" href="./manifest.webmanifest">
+<link rel="icon" href="./icons/icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="./icons/icon-192.png">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<link rel="stylesheet" href="./styles.css">
+</head>
+<body>
+
+<!-- Pantalla inicial -->
+<main id="intro">
+  <div class="intro-inner">
+    <div class="intro-mark" aria-hidden="true">
+      <span></span><span></span><span></span><span></span>
+      <span></span><span></span><span></span><span></span><span></span>
+    </div>
+    <h1>Medidor de color</h1>
+    <p class="lede">
+      Haz una foto, coloca la mira sobre el punto que te interesa y obtén
+      su medida en Lab, HEX y RGB, con la referencia RAL más cercana.
+    </p>
+
+    <div class="intro-actions">
+      <label class="btn btn-primary">
+        Hacer una foto
+        <input type="file" id="fileCamera" accept="image/*" capture="environment" hidden>
+      </label>
+      <label class="btn">
+        Elegir de la galería
+        <input type="file" id="fileGallery" accept="image/*" hidden>
+      </label>
+    </div>
+
+    <div class="intro-note">
+      <p>Para una medida fiable: luz difusa e indirecta, sin reflejos ni sombra propia,
+         y el objeto llenando buena parte del encuadre.</p>
+      <p>Si puedes incluir en la foto una hoja de papel blanco junto al objeto,
+         podrás corregir la dominante de la luz y ganar bastante exactitud.</p>
+    </div>
+  </div>
+</main>
+
+<!-- Visor -->
+<div id="stage" hidden>
+  <div class="viewport">
+    <canvas id="view"></canvas>
+
+    <div class="crosshair" aria-hidden="true">
+      <div class="ch-ring"></div>
+      <div class="ch-line ch-n"></div>
+      <div class="ch-line ch-s"></div>
+      <div class="ch-line ch-w"></div>
+      <div class="ch-line ch-e"></div>
+    </div>
+
+    <canvas id="magnifier" width="180" height="180" aria-label="Ampliación del punto medido"></canvas>
+
+    <p class="hint">Arrastra la imagen para mover la mira · pellizca para acercar</p>
+  </div>
+
+  <div id="toolbar" class="toolbar" hidden>
+    <div class="tool">
+      <label for="radius">Área de muestra</label>
+      <input type="range" id="radius" min="1" max="25" step="2" value="5">
+      <output id="radiusLabel">5 × 5 px</output>
+    </div>
+    <div class="tool-buttons">
+      <button type="button" id="fitBtn" class="btn btn-small">Ver entera</button>
+      <button type="button" id="changeBtn" class="btn btn-small">Otra foto</button>
+      <span id="imgInfo" class="meta"></span>
+    </div>
+  </div>
+
+  <!-- Lectura -->
+  <section class="readout" aria-live="polite">
+    <div class="readout-head">
+      <div id="swatch" class="swatch"></div>
+      <div class="readout-id">
+        <button type="button" id="hexValue" class="hex">#000000</button>
+        <p id="colorName" class="color-name">—</p>
+        <p class="meta"><span id="coords"></span> · <span id="quality" data-level="ok"></span></p>
+      </div>
+    </div>
+
+    <dl class="values">
+      <div><dt>RGB</dt><dd id="vRgb" class="value">—</dd></div>
+      <div><dt>HSL</dt><dd id="vHsl" class="value">—</dd></div>
+      <div><dt>HSV</dt><dd id="vHsv" class="value">—</dd></div>
+      <div><dt>CMYK</dt><dd id="vCmyk" class="value">—</dd></div>
+      <div><dt>L*a*b*</dt><dd id="vLab" class="value">—</dd></div>
+      <div><dt>LCh</dt><dd id="vLch" class="value">—</dd></div>
+    </dl>
+
+    <div class="wb">
+      <button type="button" id="wbBtn" class="btn btn-small">Fijar blanco de referencia</button>
+      <button type="button" id="saveBtn" class="btn btn-small">Guardar medición</button>
+      <p id="wbInfo" class="meta" hidden></p>
+    </div>
+  </section>
+
+  <!-- Coincidencias -->
+  <section id="matches" class="matches"></section>
+
+  <!-- Catálogo propio -->
+  <section class="custom">
+    <h3>Tu propio catálogo</h3>
+    <p>Carga un CSV con <code>código,nombre,hex</code> o <code>código,nombre,L,a,b</code>
+       para comparar contra la carta de un fabricante, un NCS o un Pantone que tengas licenciado.</p>
+    <label class="btn btn-small">
+      Cargar CSV
+      <input type="file" id="catalogFile" accept=".csv,.txt" hidden>
+    </label>
+  </section>
+
+  <!-- Historial -->
+  <section id="history" class="history" hidden>
+    <div class="history-head">
+      <h3>Mediciones guardadas <span id="historyCount">0</span></h3>
+      <button type="button" id="exportBtn" class="btn btn-small">Exportar CSV</button>
+    </div>
+    <ul id="historyList"></ul>
+  </section>
+
+  <footer class="disclaimer">
+    <p>La cámara de un móvil no es un colorímetro: el sensor y el procesado del JPEG
+       introducen desviaciones que ningún cálculo posterior recupera del todo. Las
+       equivalencias RAL son aproximaciones digitales de muestras físicas. Para
+       trabajos donde el color sea contractual, contrasta siempre con un abanico real.</p>
+  </footer>
+</div>
+
+<div id="toast" class="toast" role="status" hidden></div>
+
+<script type="module" src="./js/app.js"></script>
+</body>
+</html>

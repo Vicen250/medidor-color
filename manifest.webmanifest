@@ -1,0 +1,20 @@
+{
+  "name": "Medidor de color",
+  "short_name": "Color",
+  "description": "Mide el color exacto de un punto de una foto y encuentra su equivalencia en RAL y otras escalas.",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#2b2b2b",
+  "theme_color": "#2b2b2b",
+  "lang": "es",
+  "dir": "ltr",
+  "categories": ["utilities", "productivity", "graphics"],
+  "icons": [
+    { "src": "./icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "./icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "./icons/icon-maskable-192.png", "sizes": "192x192", "type": "image/png", "purpose": "maskable" },
+    { "src": "./icons/icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}
