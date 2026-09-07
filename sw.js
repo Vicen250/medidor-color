@@ -1,16 +1,16 @@
 /* Service worker: la app funciona entera sin conexión. */
-const CACHE = 'medidor-color-v1';
+const CACHE = 'medidor-color-v3';
 const ASSETS = [
   './',
   './index.html',
   './styles.css',
   './manifest.webmanifest',
-  './js/app.js',
-  './js/color.js',
-  './js/catalogs.js',
-  './icons/icon.svg',
-  './icons/icon-192.png',
-  './icons/icon-512.png'
+  './app.js',
+  './color.js',
+  './catalogs.js',
+  './icon.svg',
+  './icon-192.png',
+  './icon-512.png'
 ];
 
 self.addEventListener('install', e => {

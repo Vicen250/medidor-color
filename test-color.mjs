@@ -1,5 +1,5 @@
-import * as C from './js/color.js';
-import { buildCatalogs, describeColor } from './js/catalogs.js';
+import * as C from './color.js';
+import { buildCatalogs, describeColor } from './catalogs.js';
 
 let fails = 0;
 const ok = (name, cond, extra='') => { console.log((cond?'  PASS':'  FALLA')+'  '+name+(extra?'  '+extra:'')); if(!cond) fails++; };

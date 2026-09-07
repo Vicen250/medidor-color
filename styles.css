@@ -25,6 +25,12 @@
 
 * { box-sizing: border-box; }
 
+/* Las reglas de más abajo declaran display en selectores de ID y de clase,
+   que pesan más que el display:none que el navegador aplica al atributo
+   hidden. Sin esta línea, ocultar #intro o .toolbar desde JavaScript no
+   surte efecto y los paneles se quedan superpuestos. */
+[hidden] { display: none !important; }
+
 html, body {
   margin: 0;
   padding: 0;

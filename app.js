@@ -39,30 +39,46 @@ const state = {
 
 async function loadFile(file) {
   if (!file) return;
-  let bmp;
   try {
-    bmp = await createImageBitmap(file, { imageOrientation: 'from-image' });
-  } catch {
-    bmp = await createImageBitmap(file);
+    let bmp;
+    try {
+      bmp = await createImageBitmap(file, { imageOrientation: 'from-image' });
+    } catch {
+      bmp = await createImageBitmap(file);
+    }
+    state.bitmap = bmp;
+
+    const off = document.createElement('canvas');
+    off.width = bmp.width;
+    off.height = bmp.height;
+    const sctx = off.getContext('2d', { willReadFrequently: true });
+    if (!sctx) throw new Error('No se pudo crear el lienzo de trabajo');
+    sctx.drawImage(bmp, 0, 0);
+
+    // Una foto muy grande puede agotar la memoria del móvil al leer píxeles.
+    // Se comprueba aquí para fallar con un mensaje claro y no en silencio.
+    try {
+      sctx.getImageData(0, 0, 1, 1);
+    } catch {
+      throw new Error('La foto es demasiado grande para este dispositivo. Prueba con menos resolución.');
+    }
+
+    state.src = off;
+    state.sctx = sctx;
+
+    $('intro').hidden = true;
+    $('stage').hidden = false;
+    $('toolbar').hidden = false;
+
+    resizeCanvas();
+    fitImage();
+    measure();
+    $('imgInfo').textContent = `${bmp.width} × ${bmp.height} px`;
+    window.scrollTo(0, 0);
+  } catch (err) {
+    console.error(err);
+    toast('No se pudo abrir la imagen: ' + (err.message || err));
   }
-  state.bitmap = bmp;
-
-  const off = document.createElement('canvas');
-  off.width = bmp.width;
-  off.height = bmp.height;
-  const sctx = off.getContext('2d', { willReadFrequently: true });
-  sctx.drawImage(bmp, 0, 0);
-  state.src = off;
-  state.sctx = sctx;
-
-  $('intro').hidden = true;
-  $('stage').hidden = false;
-  $('toolbar').hidden = false;
-
-  resizeCanvas();
-  fitImage();
-  measure();
-  $('imgInfo').textContent = `${bmp.width} × ${bmp.height} px`;
 }
 
 /* ---------- Vista ---------- */
@@ -525,8 +541,13 @@ $('hexValue').addEventListener('click', () => copy($('hexValue').textContent, $(
 
 /* ---------- Controles ---------- */
 
-$('fileCamera').addEventListener('change', e => loadFile(e.target.files[0]));
-$('fileGallery').addEventListener('change', e => loadFile(e.target.files[0]));
+function onPick(e) {
+  const f = e.target.files[0];
+  e.target.value = ''; // sin esto, elegir la misma foto dos veces no dispara nada
+  loadFile(f);
+}
+$('fileCamera').addEventListener('change', onPick);
+$('fileGallery').addEventListener('change', onPick);
 $('changeBtn').addEventListener('click', () => $('fileCamera').click());
 
 $('radius').addEventListener('input', e => {
